@@ -1646,3 +1646,9 @@ config_setting should be one of the following:
 /proc/get_final_z(atom/A)
 	var/turf/T = get_turf(A)
 	return T ? T.z : A.z
+
+GLOBAL_VAR_INIT(auxtools_initialized,FALSE)
+
+#define AUXTOOLS_CHECK\
+	if (!GLOB.auxtools_initialized && fexists(AUXTOOLS) && findtext(call(AUXTOOLS,"auxtools_init")(),"SUCCESS"))\
+		GLOB.auxtools_initialized = TRUE;\

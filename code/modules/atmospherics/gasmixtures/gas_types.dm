@@ -30,6 +30,13 @@ GLOBAL_LIST_INIT(nonreactive_gases, typecacheof(list(/datum/gas/oxygen, /datum/g
 			return path
 	return ""
 
+// LEAVE THIS OR AUXMOS WILL EAT YOUR FACE
+/proc/meta_gas_visibility_list()
+	. = subtypesof(/datum/gas)
+	for(var/gas_path in .)
+		var/datum/gas/gas = gas_path
+		.[gas_path] = initial(gas.moles_visible)
+
 /*||||||||||||||/----------\||||||||||||||*\
 ||||||||||||||||[GAS DATUMS]||||||||||||||||
 ||||||||||||||||\__________/||||||||||||||||

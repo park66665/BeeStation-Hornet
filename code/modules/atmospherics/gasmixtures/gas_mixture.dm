@@ -10,6 +10,10 @@ What are the archived variables for?
 GLOBAL_LIST_INIT(meta_gas_info, meta_gas_list()) //see ATMOSPHERICS/gas_types.dm
 GLOBAL_LIST_INIT(gaslist_cache, init_gaslist_cache())
 
+GLOBAL_LIST_INIT(meta_gas_visibility, meta_gas_visibility_list())
+
+GLOBAL_LIST_INIT(auxtools_atmos_initialized,FALSE)
+
 /proc/init_gaslist_cache()
 	. = list()
 	for(var/id in GLOB.meta_gas_info)
@@ -30,14 +34,21 @@ GLOBAL_LIST_INIT(gaslist_cache, init_gaslist_cache())
 /datum/gas_mixture/New(volume)
 	if (!isnull(volume))
 		initial_volume = volume
-	ATMOS_EXTOOLS_CHECK
+	AUXTOOLS_CHECK
+	if(!GLOB.auxtools_atmos_initialized && auxtools_atmos_init())
+		GLOB.auxtools_atmos_initialized = TRUE
+	//_process_callbacks()
 	__gasmixture_register()
 	reaction_results = new
 
 /datum/gas_mixture/vv_edit_var(var_name, var_value)
 	if(var_name == "_extools_pointer_gasmixture")
 		return FALSE // please no. segfaults bad.
-	return ..()
+	return 
+
+/datum/gas_mixture/Del()
+	__gasmixture_unregister()
+	. = ..()
 
 /datum/gas_mixture/proc/__gasmixture_unregister()
 /datum/gas_mixture/proc/__gasmixture_register()

@@ -123,7 +123,8 @@
 #define INIT_ORDER_CIRCUIT			15
 #define INIT_ORDER_TIMER			1
 #define INIT_ORDER_DEFAULT			0
-#define INIT_ORDER_AIR				-1
+#define INIT_ORDER_CALLBACKS		-1
+#define INIT_ORDER_AIR				-2
 #define INIT_ORDER_ASSETS			-4
 #define INIT_ORDER_ICON_SMOOTHING	-5
 #define INIT_ORDER_OVERLAY			-6
@@ -166,6 +167,7 @@
 #define FIRE_PRIORITY_ATMOS_ADJACENCY	300
 #define FIRE_PRIORITY_CHAT			400
 #define FIRE_PRIORITY_OVERLAYS		500
+#define FIRE_PRIORITY_CALLBACKS		600
 #define FIRE_PRIORITY_INPUT			1000 // This must always always be the max highest priority. Player input must never be lost.
 
 // SS runlevels

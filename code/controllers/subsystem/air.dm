@@ -15,7 +15,9 @@ SUBSYSTEM_DEF(air)
 	flags = SS_BACKGROUND
 	runlevels = RUNLEVEL_GAME | RUNLEVEL_POSTGAME
 
+	var/cost_copy_from = 0
 	var/cost_turfs = 0
+	var/cost_copy_to = 0
 	var/cost_groups = 0
 	var/cost_highpressure = 0
 	var/cost_hotspots = 0
@@ -47,27 +49,25 @@ SUBSYSTEM_DEF(air)
 
 /datum/controller/subsystem/air/stat_entry(msg)
 	msg += "C:{"
-	msg += "EQ:[round(cost_equalize,1)]|"
+	msg += "CF:[round(cost_copy_from,1)]|"
 	msg += "AT:[round(cost_turfs,1)]|"
-	msg += "EG:[round(cost_groups,1)]|"
+	msg += "CT:[round(cost_copy_to,1)]|"
 	msg += "HP:[round(cost_highpressure,1)]|"
 	msg += "HS:[round(cost_hotspots,1)]|"
 	msg += "SC:[round(cost_superconductivity,1)]|"
 	msg += "PN:[round(cost_pipenets,1)]|"
 	msg += "AM:[round(cost_atmos_machinery,1)]"
 	msg += "} "
-	msg += "AT:[active_turfs.len]|"
-	msg += "EG:[get_amt_excited_groups()]|"
 	msg += "HS:[hotspots.len]|"
 	msg += "PN:[networks.len]|"
 	msg += "HP:[high_pressure_delta.len]|"
-	msg += "AS:[active_super_conductivity.len]|"
-	msg += "AT/MS:[round((cost ? active_turfs.len/cost : 0),0.1)]"
+	msg += "GA:[get_amt_gas_mixes()]|"
+	msg += "MG:[get_max_gas_mixes()]|"
 	..(msg)
 
 
 /datum/controller/subsystem/air/Initialize(timeofday)
-	extools_update_ssair()
+	//extools_update_ssair()
 	map_loading = FALSE
 	setup_allturfs()
 	setup_atmos_machinery()
@@ -95,34 +95,34 @@ SUBSYSTEM_DEF(air)
 		if(state != SS_RUNNING)
 			return
 		resumed = 0
-		currentpart = SSAIR_EQUALIZE
+		currentpart = SSAIR_ACTIVETURFS
 
-	if(currentpart == SSAIR_EQUALIZE)
+	/*if(currentpart == SSAIR_EQUALIZE)
 		timer = TICK_USAGE_REAL
 		process_turf_equalize(resumed)
 		cost_equalize = MC_AVERAGE(cost_equalize, TICK_DELTA_TO_MS(TICK_USAGE_REAL - timer))
 		if(state != SS_RUNNING)
 			return
 		resumed = 0
-		currentpart = SSAIR_ACTIVETURFS
+		currentpart = SSAIR_ACTIVETURFS*/
 
 	if(currentpart == SSAIR_ACTIVETURFS)
 		timer = TICK_USAGE_REAL
-		process_active_turfs(resumed)
+		process_turfs(resumed)
 		cost_turfs = MC_AVERAGE(cost_turfs, TICK_DELTA_TO_MS(TICK_USAGE_REAL - timer))
 		if(state != SS_RUNNING)
 			return
 		resumed = 0
-		currentpart = SSAIR_EXCITEDGROUPS
+		currentpart = SSAIR_HIGHPRESSURE
 
-	if(currentpart == SSAIR_EXCITEDGROUPS)
+	/*if(currentpart == SSAIR_EXCITEDGROUPS)
 		timer = TICK_USAGE_REAL
 		process_excited_groups(resumed)
 		cost_groups = MC_AVERAGE(cost_groups, TICK_DELTA_TO_MS(TICK_USAGE_REAL - timer))
 		if(state != SS_RUNNING)
 			return
 		resumed = 0
-		currentpart = SSAIR_HIGHPRESSURE
+		currentpart = SSAIR_HIGHPRESSURE*/
 
 	if(currentpart == SSAIR_HIGHPRESSURE)
 		timer = TICK_USAGE_REAL
@@ -222,6 +222,7 @@ SUBSYSTEM_DEF(air)
 		if(MC_TICK_CHECK)
 			return
 
+/*
 /datum/controller/subsystem/air/proc/process_turf_equalize(resumed = 0)
 	//cache for sanic speed
 	var/fire_count = times_fired
@@ -250,14 +251,38 @@ SUBSYSTEM_DEF(air)
 		if (istype(T))
 			T.process_cell(fire_count)
 		if (MC_TICK_CHECK)
-			return
+			return*/
 
+
+/datum/controller/subsystem/air/proc/process_turfs(resumed = 0)
+	if(!resumed)
+		src.currentrun = process_turfs_extools(resumed, (Master.current_ticklimit - TICK_USAGE) * 0.1 * world.tick_lag)
+		if(src.currentrun.len)
+			pause()
+	else
+		var/list/currentrun = src.currentrun
+		while(currentrun.len)
+			var/turf/open/T = currentrun[currentrun.len]
+			var/flags = currentrun[T]
+			currentrun.len--
+			if(T)
+				if(flags & 2)
+					T.air.react()
+				if(flags & 1)
+					T.update_visuals()
+			if (MC_TICK_CHECK)
+				return
+
+/*
 /datum/controller/subsystem/air/proc/process_excited_groups(resumed = 0)
 	if(process_excited_groups_extools(resumed, (Master.current_ticklimit - TICK_USAGE) * 0.01 * world.tick_lag))
-		sleep()
+		sleep()*/
 
 /datum/controller/subsystem/air/proc/process_excited_groups_extools()
 /datum/controller/subsystem/air/proc/get_amt_excited_groups()
+/datum/controller/subsystem/air/proc/process_turfs_extools()
+/datum/controller/subsystem/air/proc/get_amt_gas_mixes()
+/datum/controller/subsystem/air/proc/get_max_gas_mixes()
 
 /datum/controller/subsystem/air/proc/remove_from_active(turf/open/T)
 	active_turfs -= T

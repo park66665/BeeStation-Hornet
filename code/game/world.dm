@@ -5,9 +5,11 @@ GLOBAL_VAR(restart_counter)
 //This happens after the Master subsystem new(s) (it's a global datum)
 //So subsystems globals exist, but are not initialised
 /world/New()
-	if (fexists(EXTOOLS))
+	/*if (fexists(EXTOOLS))
 		call(EXTOOLS, "debug_initialize")()
-		call(EXTOOLS, "maptick_initialize")()
+		call(EXTOOLS, "maptick_initialize")()*/
+	
+	AUXTOOLS_CHECK
 
 	//Early profile for auto-profiler - will be stopped on profiler init if necessary.
 	world.Profile(PROFILE_START)
@@ -36,6 +38,18 @@ GLOBAL_VAR(restart_counter)
 	SetupLogs()
 	load_poll_data()
 
+	/*if(!fexists(AUXTOOLS))
+		log_runtime("No auxtools found!")
+		CRASH("No auxtools found!")
+	else
+		log_runtime("Auxtools found!")*/
+	//log_runtime("[call(AUXTOOLS,"auxtools_init")()]")
+	/*if(!auxtools_atmos_init())
+		log_runtime("Just... Blame Xenomedes (2)")
+		CRASH("Just... Blame Xenomedes (2)")
+	else
+		log_runtime("Loaded Auxmos!")*/
+
 	populate_gear_list()
 
 #ifndef USE_CUSTOM_ERROR_HANDLER
@@ -61,6 +75,8 @@ GLOBAL_VAR(restart_counter)
 
 	if(TEST_RUN_PARAMETER in params)
 		HandleTestRun()
+
+/proc/auxtools_atmos_init()
 
 /world/proc/HandleTestRun()
 	//trigger things to run the whole process
@@ -274,8 +290,10 @@ GLOBAL_VAR(restart_counter)
 		GM.__gasmixture_unregister()
 		num_deleted++
 	log_world("Deallocated [num_deleted] gas mixtures")
-	if(fexists(EXTOOLS))
-		call(EXTOOLS, "cleanup")()
+	/*if(fexists(EXTOOLS))
+		call(EXTOOLS, "cleanup")()*/
+	if(fexists(AUXTOOLS))
+		call(AUXTOOLS, "auxtools_shutdown")()	
 	..()
 
 /world/proc/update_status()
