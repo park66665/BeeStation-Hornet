@@ -52,6 +52,7 @@
 	ammo_type = list(/obj/item/ammo_casing/energy/chrono_beam)
 	can_charge = FALSE
 	fire_delay = 50
+	automatic_charge_overlays = FALSE
 	var/obj/item/chrono_eraser/TED = null
 	var/obj/structure/chrono_field/field = null
 	var/turf/startpos = null
@@ -64,9 +65,6 @@
 	else //admin must have spawned it
 		TED = new(src.loc)
 		return INITIALIZE_HINT_QDEL
-
-/obj/item/gun/energy/chrono_gun/update_icon()
-	return
 
 /obj/item/gun/energy/chrono_gun/process_fire(atom/target, mob/living/user, message = TRUE, params = null, zone_override = "", bonus_spread = 0)
 	if(field)

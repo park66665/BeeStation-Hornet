@@ -130,6 +130,7 @@
 	update_icon()
 
 /obj/item/restraints/handcuffs/cable/update_icon()
+	..()
 	color = null
 	add_atom_colour(item_color, FIXED_COLOUR_PRIORITY)
 
@@ -251,7 +252,7 @@
 	. = ..()
 	update_icon()
 
-/obj/item/restraints/legcuffs/beartrap/update_icon()
+/obj/item/restraints/legcuffs/beartrap/update_icon_state()
 	icon_state = "[initial(icon_state)][armed]"
 
 /obj/item/restraints/legcuffs/beartrap/suicide_act(mob/user)
