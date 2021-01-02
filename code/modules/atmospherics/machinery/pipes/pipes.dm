@@ -74,8 +74,7 @@
 		return ..()
 
 /obj/machinery/atmospherics/pipe/returnPipenet()
-	if(parent)
-		return parent.air
+	return parent
 
 /obj/machinery/atmospherics/pipe/setPipenet(datum/pipeline/P)
 	parent = P

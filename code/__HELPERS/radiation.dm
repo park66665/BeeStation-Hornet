@@ -17,7 +17,7 @@
 	while(processing_list.len)
 		var/atom/thing = processing_list[1]
 		processing_list -= thing
-		if(thing == null)
+		if(!thing)
 			continue
 		if(ignored_things[thing.type])
 			continue

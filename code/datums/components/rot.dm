@@ -37,7 +37,9 @@
 
 /datum/component/rot/corpse/process()
 	var/mob/living/carbon/C = parent
-	if(C == null) //can't delete what doesnt exist
+	// Ask BYOND if this actually happens (hint: it shouldn't)
+	if(!C)
+		qdel(src)
 		return
 
 	if(C.stat != DEAD)

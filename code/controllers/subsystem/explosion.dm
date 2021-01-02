@@ -1,4 +1,10 @@
+// Explosions subtasks
+#define SSEXPLOSIONS_MOVABLES 1
+#define SSEXPLOSIONS_TURFS 2
+#define SSEXPLOSIONS_THROWS 3
+
 #define EXPLOSION_THROW_SPEED 4
+
 GLOBAL_LIST_EMPTY(explosions)
 
 SUBSYSTEM_DEF(explosions)
@@ -561,3 +567,9 @@ SUBSYSTEM_DEF(explosions)
 		cost_throwturf = MC_AVERAGE(cost_throwturf, TICK_DELTA_TO_MS(TICK_USAGE_REAL - timer))
 
 	currentpart = SSEXPLOSIONS_TURFS
+
+#undef SSEXPLOSIONS_MOVABLES
+#undef SSEXPLOSIONS_TURFS
+#undef SSEXPLOSIONS_THROWS
+
+#undef EXPLOSION_THROW_SPEED

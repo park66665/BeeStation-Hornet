@@ -94,7 +94,6 @@ SUBSYSTEM_DEF(air)
 		pipenets_needing_rebuilt.Cut()
 		if(state != SS_RUNNING)
 			return
-		resumed = FALSE
 		currentpart = SSAIR_PIPENETS
 
 	if(currentpart == SSAIR_PIPENETS || !resumed)
@@ -198,8 +197,6 @@ SUBSYSTEM_DEF(air)
 	while(currentrun.len)
 		var/obj/machinery/M = currentrun[currentrun.len]
 		currentrun.len--
-		if(M == null)
-			atmos_machinery.Remove(M)
 		if(!M || (M.process_atmos(seconds) == PROCESS_KILL))
 			atmos_machinery.Remove(M)
 		if(MC_TICK_CHECK)

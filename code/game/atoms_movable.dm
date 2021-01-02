@@ -416,7 +416,7 @@
 
 /atom/movable/proc/forceMove(atom/destination)
 	. = FALSE
-	if(destination == null) //destination destroyed due to explosion
+	if(!destination) //destination destroyed due to explosion
 		return
 
 	if(destination)
