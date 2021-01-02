@@ -327,6 +327,7 @@ SUBSYSTEM_DEF(explosions)
 				dist += cached_exp_block[Trajectory]
 
 		var/flame_dist = dist < flame_range
+		var/throw_dist = dist
 
 		if(dist < devastation_range)
 			dist = EXPLODE_DEVASTATE
@@ -368,7 +369,7 @@ SUBSYSTEM_DEF(explosions)
 
 		//--- THROW ITEMS AROUND ---
 		var/throw_dir = get_dir(epicenter,T)
-		var/throw_range = max_range * 1.5
+		var/throw_range = (max_range - throw_dist) * 1.5
 		var/list/throwingturf = T.explosion_throw_details
 		if (throwingturf)
 			if (throwingturf[1] < throw_range)
