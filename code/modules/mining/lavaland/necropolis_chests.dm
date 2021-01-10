@@ -5,13 +5,69 @@
 
 /obj/structure/closet/crate/necropolis
 	name = "necropolis chest"
-	desc = "It's watching you closely."
+	desc = "It's watching you suspiciously."
 	icon_state = "necrocrate"
 	resistance_flags = LAVA_PROOF | FIRE_PROOF | ACID_PROOF
 	door_anim_time = 0
 
+/obj/structure/closet/crate/necropolis/update_icon()
+	. = ..()
+	if(locked && !opened)
+		add_overlay("necrocrate_lock")
+
+/obj/structure/closet/crate/necropolis/proc/update_desc()
+	desc = "It's watching you suspiciously."
+	if(locked)
+		desc += " It seems like it needs a key to unlock..."
+
+/obj/structure/closet/crate/necropolis/Initialize()
+	. = ..()
+	update_desc()
+
+/obj/structure/closet/crate/necropolis/attack_hand(mob/user)
+	. = ..()
+	if(.)
+		return
+	if(!opened && locked)
+		// user failed to do access the chest; warning time
+		to_chat(user, "<span class='warning'>It seems that this chest is locked in a different way; you are going to need a special key for this...</span>")
+		return
+
+/obj/structure/closet/crate/necropolis/attackby(obj/item/W, mob/user, params)
+	. = ..()
+	if(istype(W, /obj/item/chest_key))
+		locked = FALSE
+		update_icon()
+		update_desc()
+		qdel(W)
+		visible_message("The [src] unlocks, destroying the key in the process!")
+
+/obj/structure/closet/crate/necropolis/emag_act(mob/user)
+	if(locked)
+		to_chat(user, "<span class='notice'>You... hit the metal lock with the card. Nothing happens. What did you expect?</span>")
+	return // No emagging a physcial lock
+
+/obj/structure/closet/crate/necropolis/bust_open()
+	if(locked)
+		for(var/i in contents)
+			qdel(I)
+			new /obj/effect/decal/cleanable/ash(loc)
+		visible_message("<span class ='warning'>The necropolis chest lets out a wave of flame as it breaks open!</span>")
+		explosion(get_turf(src), 0, 0, 0, 3, TRUE, FALSE, 4)
+	. = ..()
+
+/obj/item/chest_key
+	name = "Mann-brand Necropolis Chest Key"
+	desc = "A key sold to Nanotrasen by Mann Co., specifically made to unlock Necropolis chests."
+	w_class = WEIGHT_CLASS_SMALL
+	icon = 'icons/obj/items_and_weapons.dmi'
+	icon_state = "mann_key"
+	item_state = "mann_key"
+
 /obj/structure/closet/crate/necropolis/tendril
 	desc = "It's watching you suspiciously."
+	locked = TRUE
+	secure = FALSE
 
 /obj/structure/closet/crate/necropolis/tendril/PopulateContents()
 	var/loot = rand(1,30)
@@ -84,6 +140,26 @@
 			new /obj/item/reagent_containers/glass/waterbottle/relic(src)
 		if(30)
 			new /obj/item/reagent_containers/glass/bottle/necropolis_seed(src)
+	if(prob(10)) // Low chance to give you a hat, funny tf2
+		var/static/list/necropolis_hat_drops = list(
+			/obj/item/clothing/head/beanie,
+			/obj/item/clothing/head/helmet/gladiator,
+			/obj/item/clothing/head/flatcap,
+			/obj/item/clothing/head/pirate,
+			/obj/item/clothing/head/beret,
+			/obj/item/clothing/head/plaguedoctorhat,
+			/obj/item/clothing/head/ushanka,
+			/obj/item/clothing/head/bowler,
+			/obj/item/clothing/head/that,
+			/obj/item/clothing/head/bandana,
+			/obj/item/clothing/head/fedora,
+			/obj/item/clothing/head/chefhat,
+			/obj/item/clothing/head/hardhat,
+			/obj/item/clothing/head/crown,
+			/obj/item/clothing/head/festive
+			)
+		var/hat = pick(necropolis_hat_drops)
+		new hat(src)
 
 //KA modkit design discs
 /obj/item/disk/design_disk/modkit_disc
