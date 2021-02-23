@@ -191,20 +191,18 @@
 			var/ratio = 1 - O2_partialpressure/safe_oxy_min
 			adjustOxyLoss(min(5*ratio, 3))
 			failed_last_breath = 1
-			oxygen_used = breath.get_moles(/datum/gas/oxygen)*ratio
 		else
 			adjustOxyLoss(3)
 			failed_last_breath = 1
 		throw_alert("not_enough_oxy", /atom/movable/screen/alert/not_enough_oxy)
-
 	else //Enough oxygen
 		failed_last_breath = 0
 		if(health >= crit_threshold)
 			adjustOxyLoss(-5)
-		oxygen_used = breath.get_moles(/datum/gas/oxygen)
 		clear_alert("not_enough_oxy")
 
-	breath.adjust_moles(/datum/gas/oxygen, -oxygen_used)
+	oxygen_used = breath.get_moles(/datum/gas/oxygen)
+	breath.set_moles(/datum/gas/oxygen, 0)
 	breath.adjust_moles(/datum/gas/carbon_dioxide, oxygen_used)
 
 	//CARBON DIOXIDE
@@ -218,7 +216,6 @@
 				adjustOxyLoss(8)
 		if(prob(20))
 			emote("cough")
-
 	else
 		co2overloadtime = 0
 
@@ -297,8 +294,6 @@
 					vomit()
 			else
 				SEND_SIGNAL(src, COMSIG_CLEAR_MOOD_EVENT, "smell")
-
-
 	//Clear all moods if no miasma at all
 	else
 		SEND_SIGNAL(src, COMSIG_CLEAR_MOOD_EVENT, "smell")

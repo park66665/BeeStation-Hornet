@@ -112,19 +112,20 @@
 	//Too little oxygen!
 	if(safe_oxygen_min)
 		if(O2_pp < safe_oxygen_min)
-			gas_breathed = handle_too_little_breath(H, O2_pp, safe_oxygen_min, breath.get_moles(/datum/gas/oxygen))
+			handle_too_little_breath(H, O2_pp, safe_oxygen_min)
 			H.throw_alert("not_enough_oxy", /atom/movable/screen/alert/not_enough_oxy)
 		else
 			H.failed_last_breath = FALSE
 			if(H.health >= H.crit_threshold)
 				H.adjustOxyLoss(-5)
-			gas_breathed = breath.get_moles(/datum/gas/oxygen)
 			H.clear_alert("not_enough_oxy")
 
 	//Exhale
-	breath.adjust_moles(/datum/gas/oxygen, -gas_breathed)
-	breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
-	gas_breathed = 0
+	gas_breathed = breath.get_moles(/datum/gas/oxygen)
+	if(gas_breathed)
+		breath.set_moles(/datum/gas/oxygen, 0)
+		breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
+		gas_breathed = 0
 
 	//-- Nitrogen --//
 
@@ -140,19 +141,20 @@
 	//Too little nitrogen!
 	if(safe_nitro_min)
 		if(N2_pp < safe_nitro_min)
-			gas_breathed = handle_too_little_breath(H, N2_pp, safe_nitro_min, breath.get_moles(/datum/gas/nitrogen))
+			handle_too_little_breath(H, N2_pp, safe_nitro_min)
 			H.throw_alert("nitro", /atom/movable/screen/alert/not_enough_nitro)
 		else
 			H.failed_last_breath = FALSE
 			if(H.health >= H.crit_threshold)
 				H.adjustOxyLoss(-5)
-			gas_breathed = breath.get_moles(/datum/gas/nitrogen)
 			H.clear_alert("nitro")
 
 	//Exhale
-	breath.adjust_moles(/datum/gas/nitrogen, -gas_breathed)
-	breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
-	gas_breathed = 0
+	gas_breathed = breath.get_moles(/datum/gas/nitrogen)
+	if(gas_breathed)
+		breath.set_moles(/datum/gas/nitrogen, 0)
+		breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
+		gas_breathed = 0
 
 	//-- CO2 --//
 
@@ -169,7 +171,6 @@
 				H.throw_alert("too_much_co2", /atom/movable/screen/alert/too_much_co2)
 			if(prob(20)) // Lets give them some chance to know somethings not right though I guess.
 				H.emote("cough")
-
 		else
 			H.co2overloadtime = 0
 			H.clear_alert("too_much_co2")
@@ -177,20 +178,20 @@
 	//Too little CO2!
 	if(safe_co2_min)
 		if(CO2_pp < safe_co2_min)
-			gas_breathed = handle_too_little_breath(H, CO2_pp, safe_co2_min, breath.get_moles(/datum/gas/carbon_dioxide))
+			handle_too_little_breath(H, CO2_pp, safe_co2_min)
 			H.throw_alert("not_enough_co2", /atom/movable/screen/alert/not_enough_co2)
 		else
 			H.failed_last_breath = FALSE
 			if(H.health >= H.crit_threshold)
 				H.adjustOxyLoss(-5)
-			gas_breathed = breath.get_moles(/datum/gas/carbon_dioxide)
 			H.clear_alert("not_enough_co2")
 
 	//Exhale
-	breath.adjust_moles(/datum/gas/carbon_dioxide, -gas_breathed)
-	breath.adjust_moles(/datum/gas/oxygen, gas_breathed)
-	gas_breathed = 0
-
+	gas_breathed = breath.get_moles(/datum/gas/carbon_dioxide)
+	if(gas_breathed)
+		breath.set_moles(/datum/gas/carbon_dioxide, 0)
+		breath.adjust_moles(/datum/gas/oxygen, gas_breathed)
+		gas_breathed = 0
 
 	//-- TOX --//
 
@@ -203,145 +204,133 @@
 		else
 			H.clear_alert("too_much_tox")
 
-
 	//Too little toxins!
 	if(safe_toxins_min)
 		if(Toxins_pp < safe_toxins_min)
-			gas_breathed = handle_too_little_breath(H, Toxins_pp, safe_toxins_min, breath.get_moles(/datum/gas/plasma))
+			handle_too_little_breath(H, Toxins_pp, safe_toxins_min)
 			H.throw_alert("not_enough_tox", /atom/movable/screen/alert/not_enough_tox)
 		else
 			H.failed_last_breath = FALSE
 			if(H.health >= H.crit_threshold)
 				H.adjustOxyLoss(-5)
-			gas_breathed = breath.get_moles(/datum/gas/plasma)
 			H.clear_alert("not_enough_tox")
 
 	//Exhale
-	breath.adjust_moles(/datum/gas/plasma, -gas_breathed)
-	breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
-	gas_breathed = 0
-
+	gas_breathed = breath.get_moles(/datum/gas/plasma)
+	if(gas_breathed)
+		breath.set_moles(/datum/gas/plasma, 0)
+		breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
+		gas_breathed = 0
 
 	//-- TRACES --//
 
-	if(breath)	// If there's some other shit in the air lets deal with it here.
-
 	// N2O
-
-		var/SA_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/nitrous_oxide))
-		if(SA_pp > SA_para_min) // Enough to make us stunned for a bit
-			H.Unconscious(60) // 60 gives them one second to wake up and run away a bit!
-			if(SA_pp > SA_sleep_min) // Enough to make us sleep as well
-				H.Sleeping(max(H.AmountSleeping() + 40, 200))
-		else if(SA_pp > 0.01)	// There is sleeping gas in their lungs, but only a little, so give them a bit of a warning
-			if(prob(20))
-				H.emote(pick("giggle", "laugh"))
-				SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "chemical_euphoria", /datum/mood_event/chemical_euphoria)
-		else
-			SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "chemical_euphoria")
-
+	var/SA_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/nitrous_oxide))
+	if(SA_pp > SA_para_min) // Enough to make us stunned for a bit
+		H.Unconscious(60) // 60 gives them one second to wake up and run away a bit!
+		if(SA_pp > SA_sleep_min) // Enough to make us sleep as well
+			H.Sleeping(max(H.AmountSleeping() + 40, 200))
+	else if(SA_pp > 0.01)	// There is sleeping gas in their lungs, but only a little, so give them a bit of a warning
+		if(prob(20))
+			H.emote(pick("giggle", "laugh"))
+			SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "chemical_euphoria", /datum/mood_event/chemical_euphoria)
+	else
+		SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "chemical_euphoria")
 
 	// BZ
-
-		var/bz_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/bz))
-		if(bz_pp > BZ_trip_balls_min)
-			H.hallucination += 10
-			H.reagents.add_reagent(/datum/reagent/bz_metabolites,5)
-			if(prob(33))
-				H.adjustOrganLoss(ORGAN_SLOT_BRAIN, 3, 150)
-
-		else if(bz_pp > 0.01)
-			H.hallucination += 5
-			H.reagents.add_reagent(/datum/reagent/bz_metabolites,1)
-
+	var/bz_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/bz))
+	if(bz_pp > BZ_trip_balls_min)
+		H.hallucination += 10
+		H.reagents.add_reagent(/datum/reagent/bz_metabolites,5)
+		if(prob(33))
+			H.adjustOrganLoss(ORGAN_SLOT_BRAIN, 3, 150)
+	else if(bz_pp > 0.01)
+		H.hallucination += 5
+		H.reagents.add_reagent(/datum/reagent/bz_metabolites,1)
 
 	// Tritium
-		var/trit_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/tritium))
-		if (trit_pp > 50)
-			H.radiation += trit_pp/2 //If you're breathing in half an atmosphere of radioactive gas, you fucked up.
-		else
-			H.radiation += trit_pp/10
+	var/trit_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/tritium))
+	if(trit_pp > 50)
+		H.radiation += trit_pp/2 //If you're breathing in half an atmosphere of radioactive gas, you fucked up.
+	else if(trit_pp)
+		H.radiation += trit_pp/10
 
 	// Nitryl
-		var/nitryl_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/nitryl))
-		if (prob(nitryl_pp))
-			to_chat(H, "<span class='alert'>Your mouth feels like it's burning!</span>")
-		if (nitryl_pp >40)
-			H.emote("gasp")
-			H.adjustFireLoss(10)
-			if (prob(nitryl_pp/2))
-				to_chat(H, "<span class='alert'>Your throat closes up!</span>")
-				H.silent = max(H.silent, 3)
-		else
-			H.adjustFireLoss(nitryl_pp/4)
-		gas_breathed = breath.get_moles(/datum/gas/nitryl)
-		if (gas_breathed > gas_stimulation_min)
+	var/nitryl_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/nitryl))
+	if(prob(nitryl_pp))
+		to_chat(H, "<span class='alert'>Your mouth feels like it's burning!</span>")
+	if(nitryl_pp > 40)
+		H.emote("gasp")
+		H.adjustFireLoss(10)
+		if (prob(nitryl_pp/2))
+			to_chat(H, "<span class='alert'>Your throat closes up!</span>")
+			H.silent = max(H.silent, 3)
+	else if(nitryl_pp)
+		H.adjustFireLoss(nitryl_pp/4)
+		if(breath.get_moles(/datum/gas/nitryl) > gas_stimulation_min)
 			H.reagents.add_reagent(/datum/reagent/nitryl,1)
-
-		breath.adjust_moles(/datum/gas/nitryl, -gas_breathed)
+		breath.set_moles(/datum/gas/nitryl, 0)
 
 	// Stimulum
-		gas_breathed = breath.get_moles(/datum/gas/stimulum)
-		if (gas_breathed > gas_stimulation_min)
+	gas_breathed = breath.get_moles(/datum/gas/stimulum)
+	if(gas_breathed)
+		if(gas_breathed > gas_stimulation_min)
 			var/existing = H.reagents.get_reagent_amount(/datum/reagent/stimulum)
 			H.reagents.add_reagent(/datum/reagent/stimulum,max(0, 1 - existing))
-		breath.adjust_moles(/datum/gas/stimulum, -gas_breathed)
+		breath.set_moles(/datum/gas/stimulum, 0)
 
 	// Miasma
-		if (breath.get_moles(/datum/gas/miasma))
-			var/miasma_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/miasma))
+	if(breath.get_moles(/datum/gas/miasma))
+		var/miasma_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/miasma))
 
-			//Miasma sickness
-			if(prob(0.5 * miasma_pp))
-				var/datum/disease/advance/miasma_disease = new /datum/disease/advance/random(2,3)
-				miasma_disease.name = "Unknown"
-				miasma_disease.try_infect(owner)
+		//Miasma sickness
+		if(prob(0.5 * miasma_pp))
+			var/datum/disease/advance/miasma_disease = new /datum/disease/advance/random(2,3)
+			miasma_disease.name = "Unknown"
+			miasma_disease.try_infect(owner)
 
-			// Miasma side effects
-			switch(miasma_pp)
-				if(0.25 to 5)
-					// At lower pp, give out a little warning
-					SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "smell")
-					if(prob(5))
-						to_chat(owner, "<span class='notice'>There is an unpleasant smell in the air.</span>")
-				if(5 to 15)
-					//At somewhat higher pp, warning becomes more obvious
-					if(prob(15))
-						to_chat(owner, "<span class='warning'>You smell something horribly decayed inside this room.</span>")
-						SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "smell", /datum/mood_event/disgust/bad_smell)
-				if(15 to 30)
-					//Small chance to vomit. By now, people have internals on anyway
-					if(prob(5))
-						to_chat(owner, "<span class='warning'>The stench of rotting carcasses is unbearable!</span>")
-						SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "smell", /datum/mood_event/disgust/nauseating_stench)
-						owner.vomit()
-				if(30 to INFINITY)
-					//Higher chance to vomit. Let the horror start
-					if(prob(15))
-						to_chat(owner, "<span class='warning'>The stench of rotting carcasses is unbearable!</span>")
-						SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "smell", /datum/mood_event/disgust/nauseating_stench)
-						owner.vomit()
-				else
-					SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "smell")
+		// Miasma side effects
+		switch(miasma_pp)
+			if(0.25 to 5)
+				// At lower pp, give out a little warning
+				SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "smell")
+				if(prob(5))
+					to_chat(owner, "<span class='notice'>There is an unpleasant smell in the air.</span>")
+			if(5 to 15)
+				//At somewhat higher pp, warning becomes more obvious
+				if(prob(15))
+					to_chat(owner, "<span class='warning'>You smell something horribly decayed inside this room.</span>")
+					SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "smell", /datum/mood_event/disgust/bad_smell)
+			if(15 to 30)
+				//Small chance to vomit. By now, people have internals on anyway
+				if(prob(5))
+					to_chat(owner, "<span class='warning'>The stench of rotting carcasses is unbearable!</span>")
+					SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "smell", /datum/mood_event/disgust/nauseating_stench)
+					owner.vomit()
+			if(30 to INFINITY)
+				//Higher chance to vomit. Let the horror start
+				if(prob(15))
+					to_chat(owner, "<span class='warning'>The stench of rotting carcasses is unbearable!</span>")
+					SEND_SIGNAL(owner, COMSIG_ADD_MOOD_EVENT, "smell", /datum/mood_event/disgust/nauseating_stench)
+					owner.vomit()
+			else
+				SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "smell")
 
-			// In a full miasma atmosphere with 101.34 pKa, about 10 disgust per breath, is pretty low compared to threshholds
-			// Then again, this is a purely hypothetical scenario and hardly reachable
-			owner.adjust_disgust(0.1 * miasma_pp)
+		// In a full miasma atmosphere with 101.34 pKa, about 10 disgust per breath, is pretty low compared to threshholds
+		// Then again, this is a purely hypothetical scenario and hardly reachable
+		owner.adjust_disgust(0.1 * miasma_pp)
+		breath.set_moles(/datum/gas/miasma, 0)
+	// Clear out moods when no miasma at all
+	else
+		SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "smell")
 
-			breath.adjust_moles(/datum/gas/miasma, -gas_breathed)
-
-		// Clear out moods when no miasma at all
-		else
-			SEND_SIGNAL(owner, COMSIG_CLEAR_MOOD_EVENT, "smell")
-
-		handle_breath_temperature(breath, H)
+	handle_breath_temperature(breath, H)
 	return TRUE
 
 
-/obj/item/organ/lungs/proc/handle_too_little_breath(mob/living/carbon/human/H = null, breath_pp = 0, safe_breath_min = 0, true_pp = 0)
-	. = 0
+/obj/item/organ/lungs/proc/handle_too_little_breath(mob/living/carbon/human/H = null, breath_pp = 0, safe_breath_min = 0)
 	if(!H || !safe_breath_min) //the other args are either: Ok being 0 or Specifically handled.
-		return FALSE
+		return
 
 	if(prob(20))
 		H.emote("gasp")
@@ -349,7 +338,6 @@
 		var/ratio = safe_breath_min/breath_pp
 		H.adjustOxyLoss(min(5*ratio, HUMAN_MAX_OXYLOSS)) // Don't fuck them up too fast (space only does HUMAN_MAX_OXYLOSS after all!
 		H.failed_last_breath = TRUE
-		. = true_pp*ratio/6
 	else
 		H.adjustOxyLoss(HUMAN_MAX_OXYLOSS)
 		H.failed_last_breath = TRUE
