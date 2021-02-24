@@ -21,7 +21,7 @@
 	var/safe_oxygen_max = 0
 	var/safe_nitro_min = 0
 	var/safe_nitro_max = 0
-	var/safe_co2_min = 0
+	var/safe_co2_min = 0 // You really shouldn't make a lung breath both CO2 and O2
 	var/safe_co2_max = 10 // Yes it's an arbitrary value who cares?
 	var/safe_toxins_min = 0
 	var/safe_toxins_max = 0.05
@@ -122,7 +122,7 @@
 
 	//Exhale
 	gas_breathed = breath.get_moles(/datum/gas/oxygen)
-	if(gas_breathed)
+	if(gas_breathed && safe_oxygen_min) // This lung consumes oxygen
 		breath.set_moles(/datum/gas/oxygen, 0)
 		breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
 		gas_breathed = 0
@@ -151,7 +151,7 @@
 
 	//Exhale
 	gas_breathed = breath.get_moles(/datum/gas/nitrogen)
-	if(gas_breathed)
+	if(gas_breathed && safe_nitro_min) // This lung consumes nitrogen
 		breath.set_moles(/datum/gas/nitrogen, 0)
 		breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
 		gas_breathed = 0
@@ -188,7 +188,7 @@
 
 	//Exhale
 	gas_breathed = breath.get_moles(/datum/gas/carbon_dioxide)
-	if(gas_breathed)
+	if(gas_breathed && safe_co2_min) // This lung consumes CO2; a kind reminder: don't make a lung consume both O2 and CO2
 		breath.set_moles(/datum/gas/carbon_dioxide, 0)
 		breath.adjust_moles(/datum/gas/oxygen, gas_breathed)
 		gas_breathed = 0
@@ -219,7 +219,8 @@
 	gas_breathed = breath.get_moles(/datum/gas/plasma)
 	if(gas_breathed)
 		breath.set_moles(/datum/gas/plasma, 0)
-		breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
+		if(safe_toxins_min || !safe_toxins_max) // This lung properly filters plasma
+			breath.adjust_moles(/datum/gas/carbon_dioxide, gas_breathed)
 		gas_breathed = 0
 
 	//-- TRACES --//
@@ -409,10 +410,10 @@
 	safe_toxins_max = 0 //We breathe this to gain POWER.
 
 /obj/item/organ/lungs/slime/check_breath(datum/gas_mixture/breath, mob/living/carbon/human/H)
-	. = ..()
-	if (breath)
+	if(breath)
 		var/plasma_pp = breath.get_breath_partial_pressure(breath.get_moles(/datum/gas/plasma))
 		owner.blood_volume += (0.2 * plasma_pp) // 10/s when breathing literally nothing but plasma, which will suffocate you.
+	. = ..()
 
 /obj/item/organ/lungs/cybernetic
 	name = "cybernetic lungs"
